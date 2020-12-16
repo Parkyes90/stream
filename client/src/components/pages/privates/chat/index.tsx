@@ -1,6 +1,5 @@
 import React, { ChangeEvent, useEffect, useState } from "react";
-import { io } from "socket.io-client";
-import { Socket } from "socket.io-client/build/socket";
+import { socket } from "../../../../index";
 
 type Message = {
   username: string;
@@ -8,7 +7,6 @@ type Message = {
 };
 
 const Chat: React.FC = () => {
-  const [socket, setSocket] = useState<null | Socket>(null);
   const [state, setState] = useState<Message>({
     username: "",
     message: "",
@@ -22,15 +20,10 @@ const Chat: React.FC = () => {
     }));
   };
   useEffect(() => {
-    const s = io("http://localhost:3080");
-    setSocket(s);
-    s.on("broadcastMessage", (data: Message) => {
+    socket.on("broadcastMessage", (data: Message) => {
       setMessages((prev) => [...prev, data]);
     });
-    return () => {
-      s.close();
-    };
-  }, [setSocket]);
+  }, []);
   return (
     <div>
       {messages.map((message, index) => {
@@ -47,7 +40,7 @@ const Chat: React.FC = () => {
         onSubmit={(e) => {
           const { username, message } = state;
           e.preventDefault();
-          socket?.emit("sendingMessage", {
+          socket.emit("sendingMessage", {
             message,
             username,
           });

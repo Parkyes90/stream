@@ -4,6 +4,8 @@ import ReactDOM from "react-dom";
 import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import reportWebVitals from "./reportWebVitals";
+import { io } from "socket.io-client";
+export const socket = io("http://localhost:3080");
 ReactDOM.render(
   <React.StrictMode>
     <BrowserRouter>
