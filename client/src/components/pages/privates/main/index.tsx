@@ -12,6 +12,13 @@ const Main: React.FC = () => {
       >
         채팅
       </button>
+      <button
+        onClick={() => {
+          history.push("/video");
+        }}
+      >
+        비디오
+      </button>
     </div>
   );
 };
