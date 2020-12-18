@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from "react";
+import { socket } from "../../../../index";
 const Video: React.FC = () => {
   const local = useRef<HTMLVideoElement>(null);
   const remote = useRef<HTMLVideoElement>(null);
   useEffect(() => {
+    socket.emit("join", "video");
     navigator.mediaDevices
       .getUserMedia({ audio: true, video: { width: 1280, height: 720 } })
       .then((stream) => {
