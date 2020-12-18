@@ -3,19 +3,17 @@ const Video: React.FC = () => {
   const local = useRef<HTMLVideoElement>(null);
   const remote = useRef<HTMLVideoElement>(null);
   useEffect(() => {
-    navigator.getUserMedia(
-      { audio: true, video: { width: 1280, height: 720 } },
-      (stream) => {
+    navigator.mediaDevices
+      .getUserMedia({ audio: true, video: { width: 1280, height: 720 } })
+      .then((stream) => {
         if (local.current) {
-          console.log(stream);
           local.current.srcObject = stream;
           local.current.play().then();
         }
-      },
-      (error) => {
+      })
+      .catch((error) => {
         console.log(error);
-      }
-    );
+      });
   }, []);
   return (
     <div>
