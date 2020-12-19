@@ -4,18 +4,32 @@ const Video: React.FC = () => {
   const local = useRef<HTMLVideoElement>(null);
   const remote = useRef<HTMLVideoElement>(null);
   useEffect(() => {
+    const connectMedia = () => {
+      navigator.mediaDevices
+        .getUserMedia({ audio: true, video: { width: 1280, height: 720 } })
+        .then((stream) => {
+          if (local.current) {
+            local.current.srcObject = stream;
+            local.current.play().then();
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    };
     socket.emit("join", "video");
-    navigator.mediaDevices
-      .getUserMedia({ audio: true, video: { width: 1280, height: 720 } })
-      .then((stream) => {
-        if (local.current) {
-          local.current.srcObject = stream;
-          local.current.play().then();
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    socket.on("created", () => {
+      connectMedia();
+    });
+    socket.on("joined", () => {
+      connectMedia();
+    });
+    socket.on("full", () => {
+      window.alert("Room is Full");
+    });
+    socket.on("candidate", () => {});
+    socket.on("offer", () => {});
+    socket.on("answer", () => {});
   }, []);
   return (
     <div>
