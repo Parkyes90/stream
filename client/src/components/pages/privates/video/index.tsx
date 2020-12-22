@@ -15,7 +15,7 @@ const Video: React.FC = () => {
           urls: "stun:stun.services.mozilla.com",
         },
         {
-          urls: "stun1.1.google.com:19302",
+          urls: "stun:stun1.1.google.com:19302",
         },
       ],
     };
@@ -63,6 +63,14 @@ const Video: React.FC = () => {
         rtcPeerConnection.ontrack = onTrack;
         rtcPeerConnection.addTrack(userStream.getTracks()[0], userStream);
         rtcPeerConnection.addTrack(userStream.getTracks()[1], userStream);
+        rtcPeerConnection
+          .createOffer()
+          .then((offer) => {
+            socket.emit("offer", offer, roomName);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
       }
     });
     socket.on("candidate", () => {});
