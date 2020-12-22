@@ -8,6 +8,7 @@ const Video: React.FC = () => {
     const roomName = "video";
     let created = false;
     let rtcPeerConnection: RTCPeerConnection;
+    let userStream: MediaStream;
     const iceServers = {
       iceServers: [
         {
@@ -23,11 +24,18 @@ const Video: React.FC = () => {
         socket.emit("candidate", event.candidate, roomName);
       }
     };
+    const onTrack = (event: any) => {
+      if (remote.current) {
+        remote.current.srcObject = event.streams[0];
+        remote.current.onloadedmetadata = () => remote.current!.play();
+      }
+    };
     const connectMedia = () => {
       navigator.mediaDevices
         .getUserMedia({ audio: true, video: { width: 1280, height: 720 } })
         .then((stream) => {
           if (local.current) {
+            userStream = stream;
             local.current.srcObject = stream;
             local.current.play().then();
           }
@@ -52,6 +60,9 @@ const Video: React.FC = () => {
       if (created) {
         rtcPeerConnection = new RTCPeerConnection(iceServers);
         rtcPeerConnection.onicecandidate = onIceCandidate;
+        rtcPeerConnection.ontrack = onTrack;
+        rtcPeerConnection.addTrack(userStream.getTracks()[0], userStream);
+        rtcPeerConnection.addTrack(userStream.getTracks()[1], userStream);
       }
     });
     socket.on("candidate", () => {});
