@@ -18,17 +18,19 @@ socketServer.on("connection", (socket: any) => {
   socket.on("join", (roomName: string) => {
     const rooms = socketServer.sockets.adapter.rooms;
     const room = rooms.get(roomName);
+    console.log(room);
+
     if (!room) {
+      console.log("created");
       socket.join(roomName);
       socket.emit("created");
     } else if (room.size === 1) {
+      console.log("joined");
       socket.join(roomName);
       socket.emit("joined");
     } else {
       socket.emit("full");
     }
-
-    console.log(rooms);
   });
   socket.on("ready", (roomName: string) => {
     console.log("Ready");

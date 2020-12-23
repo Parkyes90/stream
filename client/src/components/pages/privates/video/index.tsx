@@ -15,7 +15,7 @@ const Video: React.FC = () => {
           urls: "stun:stun.services.mozilla.com",
         },
         {
-          urls: "stun:stun1.1.google.com:19302",
+          urls: "stun:stun.1.google.com:19302",
         },
       ],
     };
@@ -30,7 +30,7 @@ const Video: React.FC = () => {
         remote.current.onloadedmetadata = () => remote.current!.play();
       }
     };
-    const connectMedia = () => {
+    const connectMedia = (isReady: boolean = false) => {
       navigator.mediaDevices
         .getUserMedia({ audio: true, video: { width: 1280, height: 720 } })
         .then((stream) => {
@@ -38,6 +38,9 @@ const Video: React.FC = () => {
             userStream = stream;
             local.current.srcObject = stream;
             local.current.play().then();
+            if (isReady) {
+              socket.emit("ready", roomName);
+            }
           }
         })
         .catch((error) => {
@@ -49,6 +52,7 @@ const Video: React.FC = () => {
       stream: any,
       isAnswer: boolean = false
     ) => {
+      console.log(flag, "created", isAnswer);
       if (flag) {
         rtcPeerConnection = new RTCPeerConnection(iceServers);
         rtcPeerConnection.onicecandidate = onIceCandidate;
@@ -57,6 +61,8 @@ const Video: React.FC = () => {
         rtcPeerConnection.addTrack(userStream.getTracks()[1], userStream);
 
         if (isAnswer) {
+          rtcPeerConnection.setRemoteDescription(stream).then();
+
           rtcPeerConnection
             .createAnswer()
             .then((answer) => {
@@ -68,7 +74,7 @@ const Video: React.FC = () => {
               console.log(err);
             });
         } else {
-          rtcPeerConnection.setRemoteDescription(stream).then();
+          console.log("ready offer");
           rtcPeerConnection
             .createOffer()
             .then((offer) => {
@@ -84,17 +90,21 @@ const Video: React.FC = () => {
     };
     socket.emit("join", roomName);
     socket.on("created", () => {
-      created = false;
+      created = true;
+      console.log("created");
+
       connectMedia();
     });
     socket.on("joined", () => {
-      created = true;
-      connectMedia();
+      created = false;
+      console.log("joined");
+      connectMedia(true);
     });
     socket.on("full", () => {
       window.alert("Room is Full");
     });
     socket.on("ready", (ready: any) => {
+      console.log("ready");
       rtcEvent(created, ready);
     });
     socket.on("candidate", (candidate: any) => {
