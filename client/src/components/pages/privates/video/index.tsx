@@ -44,6 +44,44 @@ const Video: React.FC = () => {
           console.log(error);
         });
     };
+    const rtcEvent = (
+      flag: boolean,
+      stream: any,
+      isAnswer: boolean = false
+    ) => {
+      if (flag) {
+        rtcPeerConnection = new RTCPeerConnection(iceServers);
+        rtcPeerConnection.onicecandidate = onIceCandidate;
+        rtcPeerConnection.ontrack = onTrack;
+        rtcPeerConnection.addTrack(userStream.getTracks()[0], userStream);
+        rtcPeerConnection.addTrack(userStream.getTracks()[1], userStream);
+
+        if (isAnswer) {
+          rtcPeerConnection
+            .createAnswer()
+            .then((answer) => {
+              rtcPeerConnection.setLocalDescription(answer).then();
+
+              socket.emit("answer", answer, roomName);
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        } else {
+          rtcPeerConnection.setRemoteDescription(stream).then();
+          rtcPeerConnection
+            .createOffer()
+            .then((offer) => {
+              rtcPeerConnection.setLocalDescription(offer).then();
+
+              socket.emit("offer", offer, roomName);
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        }
+      }
+    };
     socket.emit("join", roomName);
     socket.on("created", () => {
       created = false;
@@ -56,26 +94,16 @@ const Video: React.FC = () => {
     socket.on("full", () => {
       window.alert("Room is Full");
     });
-    socket.on("ready", () => {
-      if (created) {
-        rtcPeerConnection = new RTCPeerConnection(iceServers);
-        rtcPeerConnection.onicecandidate = onIceCandidate;
-        rtcPeerConnection.ontrack = onTrack;
-        rtcPeerConnection.addTrack(userStream.getTracks()[0], userStream);
-        rtcPeerConnection.addTrack(userStream.getTracks()[1], userStream);
-        rtcPeerConnection
-          .createOffer()
-          .then((offer) => {
-            socket.emit("offer", offer, roomName);
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-      }
+    socket.on("ready", (ready: any) => {
+      rtcEvent(created, ready);
     });
     socket.on("candidate", () => {});
-    socket.on("offer", () => {});
-    socket.on("answer", () => {});
+    socket.on("offer", (offer: any) => {
+      rtcEvent(!created, offer, true);
+    });
+    socket.on("answer", (answer: any) => {
+      rtcPeerConnection.setRemoteDescription(answer).then();
+    });
   }, []);
   return (
     <div>
