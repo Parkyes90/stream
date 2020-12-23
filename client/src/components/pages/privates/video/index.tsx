@@ -97,7 +97,10 @@ const Video: React.FC = () => {
     socket.on("ready", (ready: any) => {
       rtcEvent(created, ready);
     });
-    socket.on("candidate", () => {});
+    socket.on("candidate", (candidate: any) => {
+      const iceCandidate = new RTCIceCandidate(candidate);
+      rtcPeerConnection.addIceCandidate(iceCandidate).then();
+    });
     socket.on("offer", (offer: any) => {
       rtcEvent(!created, offer, true);
     });
